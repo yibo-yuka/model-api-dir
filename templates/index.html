@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>葡萄酒品種預測</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #4a154b;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4a154b;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            display: block;
+            margin: 20px auto;
+            width: 200px;
+        }
+        button:hover {
+            background-color: #611f69;
+        }
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            text-align: center;
+            display: none;
+        }
+        .result h2 {
+            margin-top: 0;
+            color: #4a154b;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .feature-description {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>葡萄酒品種預測系統</h1>
+
+        <form id="prediction-form">
+            <div class="form-group">
+                <label for="alcohol">酒精含量</label>
+                <input type="number" id="alcohol" name="alcohol" step="0.1" min="8" max="15" value="12" required>
+                <div class="feature-description">酒精含量百分比 (例如: 12%)</div>
+            </div>
+
+            <div class="form-group">
+                <label for="total_phenols">總酚含量</label>
+                <input type="number" id="total_phenols" name="total_phenols" step="0.01" min="0.5" max="4" value="1.45" required>
+                <div class="feature-description">總酚含量 (通常在 0.5 至 4.0 之間)</div>
+            </div>
+
+            <div class="form-group">
+                <label for="color_intensity">顏色強度</label>
+                <input type="number" id="color_intensity" name="color_intensity" step="0.1" min="1" max="15" value="3.6" required>
+                <div class="feature-description">顏色強度測量值 (通常在 1.0 至 15.0 之間)</div>
+            </div>
+
+            <div class="form-group">
+                <label for="hue">色調</label>
+                <input type="number" id="hue" name="hue" step="0.01" min="0.5" max="2" value="1.05" required>
+                <div class="feature-description">色調測量值 (通常在 0.5 至 2.0 之間)</div>
+            </div>
+
+            <div class="form-group">
+                <label for="proline">脯氨酸含量</label>
+                <input type="number" id="proline" name="proline" step="1" min="200" max="1500" value="450" required>
+                <div class="feature-description">脯氨酸含量 (mg/L)</div>
+            </div>
+
+            <button type="submit">預測葡萄酒品種</button>
+        </form>
+
+        <div class="loading" id="loading">
+            正在預測中...
+        </div>
+
+        <div class="result" id="result">
+            <h2>預測結果</h2>
+            <p id="prediction-output">等待預測...</p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('prediction-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            // 顯示載入狀態
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('result').style.display = 'none';
+
+            // 獲取表單數據
+            const formData = {
+                alcohol: parseFloat(document.getElementById('alcohol').value),
+                total_phenols: parseFloat(document.getElementById('total_phenols').value),
+                color_intensity: parseFloat(document.getElementById('color_intensity').value),
+                hue: parseFloat(document.getElementById('hue').value),
+                proline: parseFloat(document.getElementById('proline').value)
+            };
+
+            try {
+                // 傳送數據到預測API
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!response.ok) {
+                    throw new Error('預測請求失敗');
+                }
+
+                const result = await response.json();
+
+                // 根據預測結果顯示不同的消息
+                let predictionText;
+                switch(result.prediction) {
+                    case 0:
+                        predictionText = '預測結果: 品種 A (Class 0)';
+                        break;
+                    case 1:
+                        predictionText = '預測結果: 品種 B (Class 1)';
+                        break;
+                    case 2:
+                        predictionText = '預測結果: 品種 C (Class 2)';
+                        break;
+                    default:
+                        predictionText = `預測結果: 未知品種 (Class ${result.prediction})`;
+                }
+
+                document.getElementById('prediction-output').textContent = predictionText;
+
+            } catch (error) {
+                console.error('錯誤:', error);
+                document.getElementById('prediction-output').textContent = '預測時發生錯誤，請稍後再試。';
+            } finally {
+                // 隱藏載入狀態，顯示結果
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('result').style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
