@@ -25,5 +25,5 @@ wine_data.xlsx：訓練資料，是scikit-learn提供的葡萄酒資料集。
 ## 這個Repository使用方法
 這個專案在GCP VM上運行，並且使用Ubuntu 22.04 LST做為OS，所以可以使用linux terminal指令進行使用。
 如果有需要使用的話，pull下來之後，
-使用sudo gunicorn -w -2 -b 0.0.0.0:80 wine_app:app -daemon運行，即可使用以當前主機位址的80 port連到這個網頁。
+使用sudo gunicorn -w -2 -b 0.0.0.0:80 wine_app:app --daemon運行，即可使用以當前主機位址的80 port連到這個網頁。
 如果是直接pull到電腦，就運行wine_app.py就好。
